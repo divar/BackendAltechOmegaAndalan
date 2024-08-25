@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreAuhtorRequest;
 use App\Http\Requests\UpdateAuthorRequest;
 use App\Models\Author;
+use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AuthorController extends Controller
@@ -53,8 +55,12 @@ class AuthorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Author $author)
+    public function show($id)
     {
+        $cacheKey = "author_{$id}";
+        $author = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($id) {
+            return Author::findOrFail($id);
+        });
         $author = $author->load('book');
         return response()->json($author, 200);
     }

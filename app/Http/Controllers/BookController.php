@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateBookRequest;
 use App\Models\Author;
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class BookController extends Controller
@@ -60,8 +61,12 @@ class BookController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Book $book)
+    public function show($id)
     {
+        $cacheKey = "book_{$id}";
+        $book = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($id) {
+            return Book::findOrFail($id);
+        });
         $book = $book->load('author');
         return response()->json($book, 200);
     }
